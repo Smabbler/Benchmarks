@@ -1,0 +1,16 @@
+[project]
+name = "pubmed-qa-benchmark"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28.0",
+    "smabbler-api-client>=5.4.0",
+]
+
+[[tool.uv.index]]
+name = "smabbler-feed"
+url = "https://pkgs.dev.azure.com/Smabbler/Smabbler.Sdk/_packaging/smabblersdkfeed/pypi/simple/"
+explicit = true
+
+[tool.uv.sources]
+smabbler-api-client = { index = "smabbler-feed" }
