@@ -1,158 +1,30 @@
-# PubMed QA Benchmark — Running Instructions
+# Smabbler Benchmarks
 
-## Prerequisites
-
-### Python 3.10+
-
-```bash
-# Linux / macOS
-python3 --version
-```
-```cmd
-:: Windows
-python --version
-```
-
-Download from [python.org](https://www.python.org/downloads/) if not installed.
+A collection of benchmarks evaluating the quality and results of Smabbler Galaxia's semantic hypergraph construction, knowledge augmentation, and retrieval capabilities.
 
 ---
 
-Dependencies can be installed directly into the system Python (Section 1) or into an isolated virtual environment (Section 2). Virtual environments keep project dependencies separate from the rest of the system and from each other, preventing conflicts — this is the recommended approach.
+## Benchmarks
 
----
+### [PubMedQA — Biomedical Article Retrieval](./pubmed/)
 
-## 1. Global Installation
+Evaluates how well the Smabbler Galaxia search/API workflow retrieves the correct PubMed article for a given biomedical question. It uses the **PubMedQA Labeled Artificial (PQAL)** test set, where each question is associated with a known PubMed ID and the system is considered successful when that ID appears in the returned results.
 
-> Installs packages into the system Python. Not recommended — packages may conflict with other projects over time.
+**Dataset:** PQAL test set from [BigBio/pubmed_qa](https://huggingface.co/datasets/bigbio/pubmed_qa) — 500 questions, each mapped to a ground-truth PubMed ID.
 
-**Linux / macOS**
+**Metric:** Recall@K — the percentage of questions for which the correct PubMed ID appears within the top K retrieved results. Results are calculated using rank grouping, which correctly handles tied rankings.
 
-> **Linux:** pip is not bundled with the system Python on most distributions. Install it first:
-> ```bash
-> sudo apt install python3-pip   # Ubuntu / Debian
-> sudo dnf install python3-pip   # Fedora
-> ```
+| Metric | Result |
+|------------|-------------|
+| Recall@1 | 89.40% (447/500) |
+| Recall@3 | 93.40% (467/500) |
+| Recall@5 | 95.80% (479/500) |
+| Recall@10 | 97.60% (488/500) |
+| Recall@25 | 99.00% (495/500) |
+| Recall@50 | 99.00% (495/500) |
+| Recall@100 | 99.00% (495/500) |
 
-```bash
-pip3 install -r requirements.txt
-python3 main.py <SMABBLER_API_KEY>
-```
-
-**Windows**
-
-```cmd
-pip install -r requirements.txt
-python main.py <SMABBLER_API_KEY>
-```
-
----
-
-## 2. Virtual Environments (recommended)
-
-A virtual environment is an isolated Python installation with its own set of packages, separate from the system. With Python's built-in venv (2.1), you activate the environment in your shell before each use and deactivate it when done. uv (2.2) creates and manages the environment automatically — `uv run` handles activation implicitly, so no manual step is needed. Choose one of the following approaches.
-
-### 2.1 Python venv
-
-`venv` is included with Python on Windows and macOS. On Linux it may require a separate installation:
-
-```bash
-sudo apt install python3-venv   # Ubuntu / Debian
-# Fedora: no extra step needed
-```
-
-**Linux / macOS**
-
-First time:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python main.py <SMABBLER_API_KEY>
-deactivate
-```
-
-> **Fish shell:** replace `source .venv/bin/activate` with `source .venv/bin/activate.fish`
-
-Every subsequent run (environment and packages already in place):
-
-```bash
-source .venv/bin/activate
-python main.py <SMABBLER_API_KEY>
-deactivate
-```
-
-**Windows (cmd)**
-
-First time:
-
-```cmd
-python -m venv .venv
-.venv\Scripts\activate.bat
-pip install -r requirements.txt
-python main.py <SMABBLER_API_KEY>
-deactivate
-```
-
-Every subsequent run:
-
-```cmd
-.venv\Scripts\activate.bat
-python main.py <SMABBLER_API_KEY>
-deactivate
-```
-
-**Windows (PowerShell)**
-
-First time:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python main.py <SMABBLER_API_KEY>
-deactivate
-```
-
-Every subsequent run:
-
-```powershell
-.venv\Scripts\Activate.ps1
-python main.py <SMABBLER_API_KEY>
-deactivate
-```
-
-> **PowerShell execution policy:** if activation fails, run this command once first:
-> ```powershell
-> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-> ```
-
-### 2.2 uv (Astral)
-
-Install uv if not already available:
-
-```bash
-# Linux / macOS
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-```powershell
-# Windows (PowerShell)
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-```cmd
-:: Windows (cmd) — via MSI
-msiexec /i https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.msi
-```
-
-`pyproject.toml` contains the full dependency configuration. The following commands are **identical on all platforms and shells**:
-
-```
-uv sync
-uv run python main.py <SMABBLER_API_KEY>
-```
-
-`uv sync` resolves dependencies and sets up the environment on first run. On subsequent runs it is not needed:
-
-```
-uv run python main.py <SMABBLER_API_KEY>
-```
+**Benchmark flow:**
+1. Download and prepare the PQAL dataset into article content and question CSV files.
+2. Upload content to Galaxia, build and activate a retrieval model, run all 500 questions, and save ranked results.
+3. Calculate Recall@K across thresholds (1, 3, 5, 10, 25, 50, 100).
