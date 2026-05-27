@@ -23,12 +23,13 @@ class SmabblerGalaxia:
         smbb._analyze_csv(source_id)
         model_id = smbb._build_model([source_id])
         smbb._activate_model(model_id)
-        smbb._get_results(model_id, pqal_csv_contents_path, pqal_csv_questions_path, pqal_results_path)
+        smbb._get_results(model_id, pqal_csv_questions_path, pqal_results_path)
         smbb._deactivate_model(model_id)
 
     def _create_client(self, api_key: str) -> DefaultApi:
         configuration = Configuration()
         configuration.api_key['ApiKeyAuth'] = api_key        
+        configuration.api_key['ApiKeyAuth'] = api_key
         return DefaultApi(ApiClient(configuration))
 
     def _poll_until(self, fetch_fn, target_status: str, *, interval: int, label: str = "", initial_delay: int = 0):
@@ -77,9 +78,8 @@ class SmabblerGalaxia:
         self._poll_until(lambda: self._client.get_model(model_id), "Active", interval=30, label=f"model_id {model_id}", initial_delay=180)
         logger.info(f"Model activation complete for model_id: {model_id}. Final status: Active")
 
-    def _get_results(self, model_id: str, pqal_csv_contents_path: Path, pqal_csv_questions_path: Path, pqal_results_path: Path):
+    def _get_results(self, model_id: str, pqal_csv_questions_path: Path, pqal_results_path: Path):
         logger.info(f"Getting results for {pqal_csv_questions_path}...")
-        row_to_pmid = self._get_row_pmid_mapping(pqal_csv_contents_path)
         questions = []
         with open(pqal_csv_questions_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f, delimiter=";")
@@ -94,7 +94,7 @@ class SmabblerGalaxia:
         completed_count = 0
         with ThreadPoolExecutor(max_workers=10) as executor:
             future_to_pmid = {
-                executor.submit(self._get_result_with_retry, row_to_pmid, model_id, question): pmid
+                executor.submit(self._get_result_with_retry, model_id, question): pmid
                 for pmid, question in questions
             }
             for future in as_completed(future_to_pmid):
@@ -112,20 +112,12 @@ class SmabblerGalaxia:
             json.dump(results_dict, f, indent=None)
         logger.info(f"Results saved to {pqal_results_path}")
 
-    def _get_row_pmid_mapping(self, pqal_csv_contents_path: Path):
-        row_to_pmid = {}
-        with open(pqal_csv_contents_path) as f:
-            reader = csv.DictReader(f, delimiter=";")
-            for row in reader:
-                row_to_pmid[row["row"]] = row["pmid"]
-        return row_to_pmid
-    
-    def _get_result_with_retry(self, row_to_pmid: dict, model_id: str, question: str, 
+    def _get_result_with_retry(self, model_id: str, question: str, 
                                 max_retries: int = 3, backoff_base: float = 2.0):
         last_exception = None
         for attempt in range(max_retries):
             try:
-                return self._get_result(row_to_pmid, model_id, question)
+                return self._get_result(model_id, question)
             except Exception as e:
                 last_exception = e
                 wait = backoff_base ** attempt
@@ -137,7 +129,7 @@ class SmabblerGalaxia:
 
         raise RuntimeError(f"All {max_retries} attempts failed for question '{question}'.") from last_exception
 
-    def _get_result(self, row_to_pmid: dict, model_id: str, question: str):
+    def _get_result(self, model_id: str, question: str):
         initialize_operation_request_schema = InitializeOperationRequestSchema(
             model_id=model_id,
             text=question
@@ -149,8 +141,7 @@ class SmabblerGalaxia:
         items = result.result.result_items
         results = []
         for item in items:
-            _, row, _ = item.group.split("*")
-            pmid = row_to_pmid.get(row)
+            _, pmid, _ = item.group.split("*")
             results.append({"pmid": pmid, "rank": item.rank})
         return results
 
