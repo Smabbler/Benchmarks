@@ -29,7 +29,6 @@ class SmabblerGalaxia:
     def _create_client(self, api_key: str) -> DefaultApi:
         configuration = Configuration()
         configuration.api_key['ApiKeyAuth'] = api_key        
-        configuration.api_key['ApiKeyAuth'] = api_key
         return DefaultApi(ApiClient(configuration))
 
     def _poll_until(self, fetch_fn, target_status: str, *, interval: int, label: str = "", initial_delay: int = 0):
