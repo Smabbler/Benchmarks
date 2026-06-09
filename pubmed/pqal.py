@@ -62,12 +62,12 @@ class Pqal:
         ):
             contents_writer = csv.writer(f_contents, delimiter=";")
             questions_writer = csv.writer(f_questions, delimiter=";")
-            contents_writer.writerow(["row", "pmid", "contents"])
+            contents_writer.writerow(["pmid", "contents"])
             questions_writer.writerow(["pmid", "question"])
 
-            for row, (pmid, payload) in enumerate(data.items(), 1):
+            for pmid, payload in data.items():
                 contents = " ".join(payload.get("CONTEXTS", [])).replace("<", " < ").replace(">", " > ")
-                contents_writer.writerow([row, pmid, contents])
+                contents_writer.writerow([pmid, contents])
                 questions_writer.writerow([pmid, payload.get("QUESTION")])
                 written += 1
 
