@@ -44,7 +44,7 @@ class SmabblerGalaxia:
 
     def _upload_csv(self, pqal_csv_contents_path: Path):
         response = self._client.upload_source_file(str(pqal_csv_contents_path))
-        return response.source_id
+        return str(response.source_id)
 
     def _analyze_csv(self, source_id: str, id_column: str = "pmid", text_column: str = "contents"):
         logger.info(f"Analyzing source {source_id}...")
@@ -59,12 +59,13 @@ class SmabblerGalaxia:
 
     def _build_model(self, source_ids: list[str]):
         logger.info(f"Building model for sources {source_ids}...")
+        str_source_ids = [str(sid) for sid in source_ids]
         build_model_request_schema = BuildModelRequestSchema(
-            sources=source_ids,
+            sources=str_source_ids,
             model_name="pubmed-qa-model"
         )
         response = self._client.build_model(build_model_request_schema)
-        model_id = response.model_id
+        model_id = str(response.model_id)
         logger.info(f"Model building started, model_id: {model_id}")
         self._poll_until(lambda: self._client.get_model(model_id), "Inactive", interval=10, label=f"model_id {model_id}")
         logger.info(f"Model building complete for model_id: {model_id}. Final status: Inactive")
@@ -134,7 +135,7 @@ class SmabblerGalaxia:
             text=question
         )
         response = self._client.initialize_analysis(initialize_operation_request_schema)
-        operation_id = response.operation_id
+        operation_id = str(response.operation_id)
         self._poll_until(lambda: self._client.get_analysis_status(operation_id), "processed", interval=1)
         result = self._client.get_analysis_result(operation_id)
         items = result.result.result_items
