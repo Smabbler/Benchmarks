@@ -16,11 +16,11 @@ Evaluates how well the Smabbler Galaxia search/API workflow retrieves the correc
 
 | Metric | Result |
 |------------|-------------|
-| Recall@1 | 93.20% (466/500) |
-| Recall@3 | 96.20% (481/500) |
-| Recall@5 | 97.20% (486/500) |
-| Recall@10 | 98.20% (491/500) |
-| Recall@25 | 98.80% (494/500) |
+| Recall@1 | 93.60% (468/500) |
+| Recall@3 | 96.40% (482/500) |
+| Recall@5 | 97.40% (487/500) |
+| Recall@10 | 97.80% (489/500)|
+| Recall@25 | 98.60% (493/500) |
 | Recall@50 | 99.00% (495/500) |
 | Recall@100 | 99.00% (495/500) |
 
